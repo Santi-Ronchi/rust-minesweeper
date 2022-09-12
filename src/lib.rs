@@ -2,7 +2,6 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::vec;
-const CARGO_TOML_PATH: &str = "./minefield.txt";
 
 /// Imprime por pantalla y guarda en un archivo el resultado del campo de juego, ó el error correspondiente.
 ///
@@ -13,8 +12,8 @@ const CARGO_TOML_PATH: &str = "./minefield.txt";
 /// for loops: Analiza paso a paso el archivo campo de juego para luego analizar
 /// donde hay minas y cuantas hay al rededor de un punto. En caso de encontrar
 /// una linea totalmente en blanco, la ignora.
-pub fn run() -> Result<(), Box<dyn Error>> {
-    let file = File::open(CARGO_TOML_PATH)?;
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let file = File::open(config.filename)?;
     let mut v: Vec<Vec<char>> = vec![];
     let buffered_reader = BufReader::new(file);
 
@@ -30,17 +29,13 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         v.push(int_lines)
     }
     let minefield: Vec<String> = field_analyzer(v);
-
     let mut out_file = File::create("./mines_output.txt").expect("Unable to create file");
-    let eol = "\n";
     for field_lines in minefield {
         println!("{}", &field_lines);
-        let value = field_lines + eol;
         out_file
-            .write_all(value.as_bytes())
+            .write_all((field_lines + "\n").as_bytes())
             .expect("Unable to write data");
     }
-
     Ok(())
 }
 
@@ -74,7 +69,6 @@ pub fn field_analyzer(vect: Vec<Vec<char>>) -> Vec<String> {
     minefield
 }
 
-///
 /// Este metodo devuelve la cantidad de minas vecinas a un punto como un dato u32.
 ///
 /// iflag y jflag: Check de overflow para sumas y restas de los ejes i y j, la posicón central queda
@@ -98,38 +92,68 @@ pub fn metal_detector(i: usize, j: usize, vect: &Vec<Vec<char>>) -> u32 {
             }
         }
     }
-
     mine_counter
 }
 
-//pub struct Config {
-//    pub filename: String,
-//}
-//
-//impl Config {
-//    pub fn new(args: &[String]) -> Result<Config, &str> {
-//        if args.len() < 2 {
-//            return Err("Missing arguments!");
-//        }
-//
-//        let filename = args[1].to_string();
-//
-//        Ok(Config { filename })
-//    }
-//}
+///Toma el path del campo de juego en la invocación del programa, en el caso de que no haya un archivo
+/// avisa al usuario que falta el path.
+pub struct Config {
+    pub filename: String,
+}
 
-//#[cfg(test)]
-//mod tests {
-//    use super::*;
-//
-//    #[test]
-//    fn no_mines() {
-//        let query = "duct";
-//        let contents = "\
-//Rust:
-//safe, fast, productive.
-//pick three.";
-//
-//        assert_eq!(vec!["safe, fast, productive."], search(query, contents));
-//    }
-//}
+impl Config {
+    pub fn new(args: &[String]) -> Result<Config, &str> {
+        if args.len() < 2 {
+            return Err("Missing arguments!");
+        }
+
+        let filename = args[1].to_string();
+
+        Ok(Config { filename })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_mines() {
+        let vect: Vec<Vec<char>> = vec![
+            vec!['*', '*', '*'],
+            vec!['*', '.', '*'],
+            vec!['*', '*', '*'],
+        ];
+
+        assert_eq!(8, metal_detector(1, 1, &vect));
+    }
+
+    #[test]
+    fn saving_missinputs() {
+        let vect: Vec<Vec<char>> = vec![
+            vec!['*', '*', '*'],
+            vec!['*', 'g', '*'],
+            vec!['*', 'k', '*'],
+        ];
+
+        assert_eq!(7, metal_detector(1, 1, &vect));
+    }
+
+    #[test]
+    fn analyzing_nothing() {
+        let vect: Vec<Vec<char>> = vec![];
+        let empty: Vec<String> = vec![];
+        assert_eq!(empty, field_analyzer(vect));
+    }
+
+    #[test]
+    fn analyzing_all_trash() {
+        let vect: Vec<Vec<char>> = vec![
+            vec!['h', 'o', 'l'],
+            vec!['a', 'm', 'u'],
+            vec!['n', 'd', 'o'],
+        ];
+        let no_mines: Vec<String> = vec!["...".to_string(), "...".to_string(), "...".to_string()];
+        assert_eq!(no_mines, field_analyzer(vect));
+    }
+}
