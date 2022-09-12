@@ -71,7 +71,7 @@ pub fn field_analyzer(vect: Vec<Vec<char>>) -> Vec<String> {
 
 /// Este metodo devuelve la cantidad de minas vecinas a un punto como un dato u32.
 ///
-/// iflag y jflag: Check de overflow para sumas y restas de los ejes i y j, la posicón central queda
+/// iflag y jflag: Check de overflow para restas (pos 0) y sumas (pos 2) de los ejes i y j, la posicón central queda
 /// hardcodeada en false ya que no es posible tener overflow consigo mismo.
 ///
 /// mine_counter: Contador de minas vecinas.
@@ -101,6 +101,7 @@ pub struct Config {
     pub filename: String,
 }
 
+///Recibe el nombre del filepath por el primer argumento de la llamada al programa, si no recibe el file avisa mediante un error.
 impl Config {
     pub fn new(args: &[String]) -> Result<Config, &str> {
         if args.len() < 2 {
@@ -129,6 +130,17 @@ mod tests {
     }
 
     #[test]
+    fn all_mines() {
+        let vect: Vec<Vec<char>> = vec![
+            vec!['.', '.', '.'],
+            vec!['.', '.', '.'],
+            vec!['.', '.', '.'],
+        ];
+
+        assert_eq!(0, metal_detector(1, 1, &vect));
+    }
+
+    #[test]
     fn saving_missinputs() {
         let vect: Vec<Vec<char>> = vec![
             vec!['*', '*', '*'],
@@ -154,6 +166,17 @@ mod tests {
             vec!['n', 'd', 'o'],
         ];
         let no_mines: Vec<String> = vec!["...".to_string(), "...".to_string(), "...".to_string()];
+        assert_eq!(no_mines, field_analyzer(vect));
+    }
+
+    #[test]
+    fn analyzing_all_mines() {
+        let vect: Vec<Vec<char>> = vec![
+            vec!['*', '*', '*'],
+            vec!['*', '*', '*'],
+            vec!['*', '*', '*'],
+        ];
+        let no_mines: Vec<String> = vec!["***".to_string(), "***".to_string(), "***".to_string()];
         assert_eq!(no_mines, field_analyzer(vect));
     }
 }
