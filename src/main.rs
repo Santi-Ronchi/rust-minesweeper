@@ -1,6 +1,7 @@
-use guessing_game::Config;
 use std::env;
 use std::process;
+mod config;
+use crate::config::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -10,7 +11,7 @@ fn main() {
         process::exit(1);
     });
 
-    if let Err(e) = guessing_game::run(config) {
+    if let Err(e) = run(config.filename) {
         println!("app error: {}", e);
         process::exit(1);
     }
